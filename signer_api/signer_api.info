@@ -4,5 +4,7 @@ core = 7.x
 version = 7.x.1
 package = Signer
 
+dependencies[] = database_stream_wrapper
+
 files[] = classes/Signer.class.inc
 files[] = classes/SignerException.class.inc
