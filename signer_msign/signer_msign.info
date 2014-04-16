@@ -1,0 +1,8 @@
+name = Msign
+description = Provide to users to sign documents with MSign
+core = 7.x
+version = 7.x.1
+package = Signer
+dependencies[] = signer_api
+
+files[] = classes/Msign.class.inc

@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://msignature.pki.cts.md/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" targetNamespace="http://msignature.pki.cts.md/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://msignature.pki.cts.md/">
+      <s:element name="Verify">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="request" type="tns:VerifyRequest" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="VerifyRequest">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="ServiceId" nillable="true" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="DataContentType" type="tns:TypeDataContent" />
+          <s:element minOccurs="1" maxOccurs="1" name="SignatureFormat" type="tns:TypeSignatureFormat" />
+          <s:element minOccurs="1" maxOccurs="1" name="SignatureType" type="tns:TypeSignatureContent" />
+          <s:element minOccurs="1" maxOccurs="1" name="Signature" nillable="true" type="s:base64Binary" />
+          <s:element minOccurs="0" maxOccurs="1" name="DataToBeVerify" type="s:base64Binary" />
+        </s:sequence>
+      </s:complexType>
+      <s:simpleType name="TypeDataContent">
+        <s:restriction base="s:string">
+          <s:enumeration value="Hash" />
+          <s:enumeration value="Text" />
+          <s:enumeration value="Xml" />
+          <s:enumeration value="Pdf" />
+          <s:enumeration value="Doc" />
+          <s:enumeration value="Binary" />
+        </s:restriction>
+      </s:simpleType>
+      <s:simpleType name="TypeSignatureFormat">
+        <s:list>
+          <s:simpleType>
+            <s:restriction base="s:string">
+              <s:enumeration value="XadEs" />
+              <s:enumeration value="XadEsT" />
+              <s:enumeration value="XadEsC" />
+              <s:enumeration value="Pkcs7" />
+              <s:enumeration value="Pkcs1" />
+              <s:enumeration value="PadEs" />
+              <s:enumeration value="PadEsT" />
+              <s:enumeration value="CadEs" />
+              <s:enumeration value="CadEsT" />
+            </s:restriction>
+          </s:simpleType>
+        </s:list>
+      </s:simpleType>
+      <s:simpleType name="TypeSignatureContent">
+        <s:restriction base="s:string">
+          <s:enumeration value="Enveloped" />
+          <s:enumeration value="Enveloping" />
+          <s:enumeration value="Detached" />
+        </s:restriction>
+      </s:simpleType>
+      <s:element name="VerifyResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="VerifyResult" type="tns:VerifyResponse" />
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="VerifyResponse">
+        <s:sequence>
+          <s:element minOccurs="1" maxOccurs="1" name="StatusCode" type="tns:TypeStatus" />
+          <s:element minOccurs="0" maxOccurs="1" name="StatusMessage" type="s:string" />
+          <s:element minOccurs="0" maxOccurs="1" name="Certificate" type="s:base64Binary" />
+          <s:element minOccurs="0" maxOccurs="1" name="Certificates" type="tns:ArrayOfCertificateId" />
+        </s:sequence>
+      </s:complexType>
+      <s:simpleType name="TypeStatus">
+        <s:list>
+          <s:simpleType>
+            <s:restriction base="s:string">
+              <s:enumeration value="None" />
+              <s:enumeration value="RequestOk" />
+              <s:enumeration value="WrongParam" />
+              <s:enumeration value="MissingParam" />
+              <s:enumeration value="WrongDataLength" />
+              <s:enumeration value="UnauthorizedAccess" />
+              <s:enumeration value="UnknownClient" />
+              <s:enumeration value="UnsupportedProfile" />
+              <s:enumeration value="ExpiredTransaction" />
+              <s:enumeration value="OtaERROR" />
+              <s:enumeration value="UserCancel" />
+              <s:enumeration value="PinNrBlocked" />
+              <s:enumeration value="CardBlocked" />
+              <s:enumeration value="NoKeyFound" />
+              <s:enumeration value="NoUrlFound" />
+              <s:enumeration value="PbSignatureProcess" />
+              <s:enumeration value="NoCertFound" />
+              <s:enumeration value="CrlPb" />
+              <s:enumeration value="CrlExpired" />
+              <s:enumeration value="ERRORCertificate" />
+              <s:enumeration value="Signature" />
+              <s:enumeration value="RevokedCertificate" />
+              <s:enumeration value="ValidSignature" />
+              <s:enumeration value="InvalidSignature" />
+              <s:enumeration value="OustandingTransaction" />
+              <s:enumeration value="InternalERROR" />
+              <s:enumeration value="WrongIDNO" />
+              <s:enumeration value="WrongIDNP" />
+              <s:enumeration value="MobileSignatureNotFound" />
+              <s:enumeration value="InvalidDelegation" />
+              <s:enumeration value="BillingError" />
+            </s:restriction>
+          </s:simpleType>
+        </s:list>
+      </s:simpleType>
+      <s:complexType name="ArrayOfCertificateId">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="CertificateId" nillable="true" type="tns:CertificateId" />
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="CertificateId">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="Cert" type="s:base64Binary" />
+          <s:element minOccurs="0" maxOccurs="1" name="Details" type="s:string" />
+          <s:element minOccurs="1" maxOccurs="1" name="CertStatus" type="tns:TypeCertificateStatus" />
+          <s:element minOccurs="1" maxOccurs="1" name="StatusDate" type="s:dateTime" />
+        </s:sequence>
+      </s:complexType>
+      <s:simpleType name="TypeCertificateStatus">
+        <s:list>
+          <s:simpleType>
+            <s:restriction base="s:string">
+              <s:enumeration value="Valid" />
+              <s:enumeration value="NotTrusted" />
+              <s:enumeration value="Revoked" />
+              <s:enumeration value="Expired" />
+              <s:enumeration value="Unknown" />
+              <s:enumeration value="TTSNotTrusted" />
+              <s:enumeration value="OCSPNotTrusted" />
+              <s:enumeration value="NotContainTTS" />
+              <s:enumeration value="Invalid" />
+            </s:restriction>
+          </s:simpleType>
+        </s:list>
+      </s:simpleType>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="VerifySoapIn">
+    <wsdl:part name="parameters" element="tns:Verify" />
+  </wsdl:message>
+  <wsdl:message name="VerifySoapOut">
+    <wsdl:part name="parameters" element="tns:VerifyResponse" />
+  </wsdl:message>
+  <wsdl:portType name="PhysicalVerifySoap">
+    <wsdl:operation name="Verify">
+      <wsdl:input message="tns:VerifySoapIn" />
+      <wsdl:output message="tns:VerifySoapOut" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="PhysicalVerifySoap" type="tns:PhysicalVerifySoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="Verify">
+      <soap:operation soapAction="http://msignature.pki.cts.md/Verify" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="PhysicalVerifySoap12" type="tns:PhysicalVerifySoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="Verify">
+      <soap12:operation soapAction="http://msignature.pki.cts.md/Verify" style="document" />
+      <wsdl:input>
+        <soap12:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="PhysicalVerify">
+    <wsdl:port name="PhysicalVerifySoap" binding="tns:PhysicalVerifySoap">
+      <soap:address location="https://msignature.cts.md/Services/PhysicalVerify.asmx" />
+    </wsdl:port>
+    <wsdl:port name="PhysicalVerifySoap12" binding="tns:PhysicalVerifySoap12">
+      <soap12:address location="https://msignature.cts.md/Services/PhysicalVerify.asmx" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

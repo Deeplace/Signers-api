@@ -1,0 +1,9 @@
+name = Signer STC
+description = Signes documents using Special Telecommunication Center.
+package = Signer
+core = 7.x
+version = 7.x-1.0
+
+dependencies[] = signer_api
+
+files[] = classes/SignerStc.class.inc

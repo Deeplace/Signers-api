@@ -1,0 +1,9 @@
+name = Signer PHP
+description = Signes documents using PHP library.
+package = Signer
+core = 7.x
+version = 7.x-1.0
+
+dependencies[] = signer_api
+
+files[] = classes/SignerPhp.class.inc

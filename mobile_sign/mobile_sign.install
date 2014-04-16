@@ -1,0 +1,69 @@
+<?php
+
+/**
+ * Implements hook_schema
+ */
+function mobile_sign_schema() {
+  $schema['mobile_id_transaction'] = array(
+    'fields' => array(
+      'transactionId' => array(
+        'type' => 'varchar',
+        'not null' => FALSE,
+        'length' => 255,
+      ),
+      'hash_fid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'status' => array(
+        'type' => 'varchar',
+        'not null' => FALSE,
+        'length' => 255,
+      ),
+      'phone' => array(
+        'type' => 'varchar',
+        'not null' => FALSE,
+        'length' => 255,
+      ),
+      'verification_code' => array(
+        'type' => 'varchar',
+        'not null' => FALSE,
+        'length' => 255,
+      ),
+      'created' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'updated' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'info' => array(
+        'type' => 'blob',
+        'not null' => TRUE,
+      ),
+      'user_message' => array(
+        'type' => 'varchar',
+        'not null' => FALSE,
+        'length' => 512,
+      ),
+    ),
+    'indexes' => array(
+      'status' => array('status'),
+      'hash_fid' => array('hash_fid')
+    ),
+    'unique keys' => array(
+      'transactionId' => array('transactionId')
+    )
+  );
+
+  return $schema;
+}

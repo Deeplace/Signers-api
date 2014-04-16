@@ -1,0 +1,65 @@
+<?php
+
+/**
+ * Implements hook_signer_links().
+ */
+function signer_stc_signer_links() {
+  if(!user_access('use signer stc sign')) return;
+  return array(
+    array(
+      'data' => '<a href="#" class="stc_sign_document"  signer_plugin = "'.signer_stc_signer_plugin_class().'"><span>' . t('STC signature') . '</span></a>',
+      'weight' => 1
+    )
+  );
+}
+
+
+/**
+ * Implements hook_signer_plugin_class()
+ */
+function signer_stc_signer_plugin_class() {
+  if(!user_access('use signer stc sign')) return;
+  return 'SignerStc';
+}
+
+/**
+ * Implements hook_signer_prepare_environment
+ */
+function signer_stc_signer_prepare_environment() {
+  if(!user_access('use signer stc sign')) return;
+  global $user;
+
+  if(!$user->uid) {
+    return;
+  }
+
+  $account = user_load($user->uid);
+  $idnp = field_get_items('user', $account, 'field_idnp');
+  $idno = field_get_items('user', $account, 'field_idno');
+
+  $path = drupal_get_path('module', 'signer_stc');
+
+  $applet_name = variable_get('sign_applet', 'SignerApplet.jar');
+  $applet_code = variable_get('sign_namespace', 'pl.unizeto.procertum.applet.SignerApplet.class');
+
+  $sign_user_info  = array(
+    'signer' => array('idnp' => $idnp[0]['value'], 'idno' => $idno[0]['value'], 'path' => base_path() .  $path . '/jar/' . $applet_name, 'namespace' => $applet_code)
+  );
+
+  drupal_add_js($sign_user_info, 'setting');
+  drupal_add_js($path . '/js/signer_stc_api.js');
+  drupal_add_js($path . '/js/signer_stc.js');
+
+}
+
+/**
+ * Implementation of hook_permission
+ */
+function signer_stc_permission() {
+  return array(
+    'use signer stc sign' => array(
+      'title' => t('use signer stc sign'),
+      'description' => t('Provide to users to use signer stc sign')
+    )
+  );
+}

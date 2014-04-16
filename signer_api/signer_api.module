@@ -1,0 +1,104 @@
+<?php
+
+define('SIGNER_OPERATION_ADD', 'ADD');
+define('SIGNER_OPERATION_REMOVE', 'REMOVE');
+
+/**
+ *  Implements hook_menu()
+ */
+
+function signer_api_menu() {
+  $items = array();
+
+  $items['admin/config/system/signer-config'] = array(
+    'title' => 'Config signer module',
+    'description' => "Configure module's settings",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('signer_api_settings_form'),
+    'access arguments' => array('administer content'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'signer_api.admin.inc'
+  );
+
+  $items['signer_api/prepare_data_to_sign'] = array(
+    'page callback' => 'signer_api_prepare_sign',
+    'access arguments' => array('sign data'),
+    'type' => MENU_CALLBACK,
+    'file' => 'signer_api.pages.inc'
+  );
+
+  $items['signer_api/sign/store'] = array(
+    'page callback' => 'signer_api_store_sign',
+    'access arguments' => array('sign data'),
+    'type' => MENU_CALLBACK,
+    'file' => 'signer_api.pages.inc'
+  );
+
+  $items['signer_api/unsign'] = array(
+    'page callback' => 'signer_api_unsign',
+    'access arguments' => array('sign data'),
+    'type' => MENU_CALLBACK,
+    'file' => 'signer_api.pages.inc'
+  );
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_permission
+ */
+function signer_api_permission() {
+  return array(
+    'sign data' => array(
+      'title' => t('Sign data'),
+      'description' => t('Provide to users to sign data')
+    )
+  );
+}
+
+/**
+ * Implements hook_signer_prepare_environment
+ */
+function signer_api_signer_prepare_environment() {
+  $path = drupal_get_path('module', 'signer_api');
+  drupal_add_js($path . '/js/signer_api.js');
+  drupal_add_js(
+    array(
+      'signer_api' => array(
+        'sign_text' => t('Please choose sign method'),
+        'unsign_text' => t('Please choose which type of sign do you need to remove?'),
+        'sign_store_url' => url('signer_api/sign/store'),
+        'unsign_store_url' => url('signer_api/unsign')
+      )
+    ),
+    'setting'
+  );
+
+  drupal_add_library('system', 'ui.dialog');
+}
+
+/**
+ * Implements hook_page_alter
+ */
+function signer_api_page_alter(&$page) {
+  $pages = variable_get('signer_api_dialog_pages', '');
+
+  if (drupal_match_path($_GET['q'], $pages)) {
+    module_invoke_all('signer_prepare_environment');
+    $page['content']['signer_dialog'] = signer_api_get_plugins_links();
+    $page['content']['signer_forms']['signer_js_form'] = module_invoke_all('signer_forms');
+  }
+}
+
+function signer_api_get_plugins_links() {
+  $links = module_invoke_all('signer_links');
+
+  uasort($links, 'drupal_sort_weight');
+
+  return array(
+    '#prefix' => '<div id = "signer-dialog">',
+    '#suffix' => '</div>',
+    '#theme' => 'item_list',
+    '#items' => $links,
+  );
+}

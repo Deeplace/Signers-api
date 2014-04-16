@@ -1,0 +1,103 @@
+<?php
+
+include_once('mobile_sign.api.inc');
+
+/**
+ * Implements hook_signer_links
+ */
+function mobile_sign_signer_links() {
+  if(!user_access('use mobile sign')) return;
+  return array(
+    array(
+      'data' => l(
+        '<span>' .t('MobileId') . '</span>',
+        '#',
+        array('html' => TRUE, 'absolute' => TRUE, 'external' => TRUE, 'attributes' => array('class' => array('mobile_sign_document'), 'signer_plugin' => mobile_sign_signer_plugin_class()))
+      ),
+      'weight' => 2
+    )
+  );
+}
+
+/**
+ * Implements hook_signer_plugin_class()
+ */
+function mobile_sign_signer_plugin_class() {
+  if(!user_access('use mobile sign')) return;
+  return 'MobileSign';
+}
+
+
+/**
+ * Implements hook_signer_prepare_environment
+ */
+function mobile_sign_signer_prepare_environment() {
+  if(!user_access('use mobile sign')) return;
+  $path = drupal_get_path('module', 'mobile_sign');
+  drupal_add_js("{$path}/js/sign.js");
+}
+
+/**
+ * Implements hook_signer_forms
+ */
+function mobile_sign_signer_forms() {
+  if(!user_access('use mobile sign')) return;
+  return array('mobile_sign_form' => mobile_sign_form());
+}
+
+/**
+ * Implements hook_menu()
+ */
+function mobile_sign_menu() {
+  $items['mobile_id/sign'] = array(
+    'title' => 'Sign doc',
+    'page callback' => 'mobile_sign_doc',
+    'access arguments' => array('use mobile sign'),
+    'file' => 'mobile_sign.pages.inc'
+  );
+
+  $items['mobile_id/response'] = array(
+    'title' => 'Mobile id response',
+    'page callback' => 'mobile_sign_response',
+    'access callback' => TRUE,
+    'file' => 'mobile_sign.pages.inc'
+  );
+
+  $items['mobile_id/check_status'] = array(
+    'title' => 'Mobile id response',
+    'page callback' => 'mobile_sign_check_status',
+    'access arguments' => array('use mobile sign'),
+    'file' => 'mobile_sign.pages.inc'
+  );
+
+  $items['admin/config/services/mobile_sign'] = array(
+    'title' => 'Mobile sign settings',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mobile_sign_settings_form'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'mobile_sign.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_permission()
+ */
+function mobile_sign_permission() {
+  return array(
+    'use mobile sign' => array(
+      'title' => t('use mobile sign'),
+      'description' => t('Provide to users to use mobile sign')
+    )
+  );
+}
+
+/**
+ * Implementation of hook_cron
+ */
+function mobile_sign_cron() {
+  db_delete('mobile_id_transaction')
+    ->condition('created', strtotime('-'. variable_get('mobile_sign_remove_sign_request_after', '15') . ' day'), '<=')
+  ->execute();
+}

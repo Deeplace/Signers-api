@@ -1,0 +1,118 @@
+<?php
+
+include_once('signer_msign.api.inc');
+
+/**
+ * Implements hook_signer_links
+ */
+function signer_msign_signer_links() {
+  if(!user_access('use sign msign')) return;
+  return array(
+    array(
+      'data' => l(
+        '<span>' .t('Msign') . '</span>',
+        '#',
+        array('html' => TRUE, 'absolute' => TRUE, 'external' => TRUE, 'attributes' => array('class' => array('msign_document'), 'signer_plugin' => signer_msign_signer_plugin_class()))
+      ),
+      'weight' => 3
+    )
+  );
+}
+
+/**
+ * Implements hook_signer_plugin_class()
+ */
+function signer_msign_signer_plugin_class() {
+  if(!user_access('use sign msign')) return;
+  return 'MSign';
+}
+
+
+/**
+ * Implements hook_signer_prepare_environment
+ */
+function signer_msign_signer_prepare_environment() {
+  if(!user_access('use sign msign')) return;
+  $path = drupal_get_path('module', 'signer_msign');
+  drupal_add_js("{$path}/js/sign.js");
+
+  $settings = array(
+    'msign' => array(
+      'sign_url' => url('msign/sign')
+    )
+  );
+
+  drupal_add_js($settings, 'setting');
+}
+
+/**
+ * Implements hook_signer_forms
+ */
+function signer_msign_signer_forms() {
+  if(!user_access('use sign msign')) return;
+  return array('msign_form' => signer_msign_form());
+}
+
+/**
+ * Implements hook_menu()
+ */
+function signer_msign_menu() {
+  $items['msign/sign'] = array(
+    'title' => 'Sign doc',
+    'page callback' => 'signer_msign_sign_doc',
+    'access arguments' => array('use sign msign'),
+    'file' => 'signer_msign.pages.inc'
+  );
+
+  $items['msign/response'] = array(
+    'title' => 'Sign document result',
+    'page callback' => 'signer_msign_response',
+    'access callback' => TRUE,
+    'file' => 'signer_msign.pages.inc'
+  );
+
+  $items['admin/config/services/msign'] = array(
+    'title' => 'Msign settings',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('signer_msign_settings_form'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'signer_msign.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_permission()
+ */
+function signer_msign_permission() {
+  return array(
+    'use sign msign' => array(
+      'title' => t('use sign MSign'),
+      'description' => t('Provide to users to use MSign')
+    )
+  );
+}
+
+/**
+ * Implementation of hook_cron
+ */
+function signer_msign_cron() {
+  module_load_include('inc', 'signer_msign', 'signer_msign.pages');
+  db_delete('msign_transaction')
+    ->condition('created', strtotime('-'. variable_get('signer_msign_remove_sign_request_after', '15') . ' day'), '<=')
+  ->execute();
+
+  $query = db_select('msign_transaction', 'mt');
+  $query->fields('mt', array('request_id'))
+    ->condition('mt.status', array('', 'Pending'))
+    ->condition('mt.created', strtotime('-20 min'), '<=')
+    ->condition('mt.created', strtotime('-'. variable_get('signer_msign_retry_pending_request_count_days', '2') . ' day'), '>=')
+    ->range(0, 5);
+
+  $result = $query->execute();
+
+  foreach($result as $obj) {
+    signer_msign_response($obj->request_id);
+  }
+}

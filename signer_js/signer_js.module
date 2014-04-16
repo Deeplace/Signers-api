@@ -1,0 +1,114 @@
+<?php
+
+/**
+ * Implements hook_signer_links
+ */
+function signer_js_signer_links() {
+  if(!user_access('use signer js sign')) return;
+  return array(
+    array(
+      'data' => '<a href="#sign_applet" rel = "#sign_applet" class="sign_document" signer_plugin = "'.signer_js_signer_plugin_class().'"><span>' . t('AGEPI signature') . '</span></a>',
+      'weight' => 1
+    )
+  );
+}
+
+/**
+ * Implements hook_signer_plugin_class()
+ */
+function signer_js_signer_plugin_class() {
+  if(!user_access('use signer js sign')) return;
+  return 'SignerJs';
+}
+
+/**
+ * Implements hook_signer_prepare_environment
+ */
+function signer_js_signer_prepare_environment() {
+  if(!user_access('use signer js sign')) return;
+  $meta_description = array(
+    '#type' => 'html_tag',
+    '#tag' => 'meta',
+    '#attributes' => array(
+      'name' => 'Cache-Control',
+      'content' => 'no-cache, must-revalidate' // HTTP/1.1
+    )
+  );
+
+  drupal_add_html_head($meta_description,'');
+
+  $meta_description = array(
+    '#type' => 'html_tag',
+    '#tag' => 'meta',
+    '#attributes' => array(
+      'name' => 'Expires',
+      'content' => 'Mon, 26 Jul 1997 05:00:00 GMT' // Date in the past
+    )
+  );
+
+  drupal_add_html_head($meta_description,'');
+  drupal_add_library('system', 'ui.dialog');
+  $path = drupal_get_path('module', 'signer_js');
+  drupal_add_js($path . '/js/jsbn.js');
+  drupal_add_js($path . '/js/jsbn2.js');
+  drupal_add_js($path . '/js/prng4.js');
+  drupal_add_js($path . '/js/rng.js');
+  drupal_add_js($path . '/js/rsa.js');
+  drupal_add_js($path . '/js/rsa2.js');
+  drupal_add_js($path . '/js/sha1.js');
+  drupal_add_js($path . '/js/sha256.js');
+  drupal_add_js($path . '/js/rsa-pem.js');
+  drupal_add_js($path . '/js/rsa-sign.js');
+  drupal_add_js($path . '/js/base64.js');
+  drupal_add_js($path . '/js/asn1hex.js');
+  drupal_add_js($path . '/js/x509.js');
+  drupal_add_js($path . '/js/sign.js');
+  drupal_add_js($path . '/js/swfobject.js');
+  drupal_add_js($path . '/js/sign_js.js');
+  drupal_add_js($path . '/js/xmlapi.js');
+
+   drupal_add_js(
+    array(
+      'sign_service' => array(
+        'not_found_key_string' => t('Please at first upload your signature'),
+        'sign_process_string' => t('Wait please some minutes. Document is signing.'),
+        'unsign_confirm_string' => t('Do you really want to unsign document?'),
+        'button_name' => t('Upload signature'),
+        'module_path' => base_path() . $path,
+    ),
+  ), 'setting');
+
+}
+
+function signer_js_form() {
+  return array(
+              '#prefix' => '<div id = "signer_form">',
+              '#suffix' => '</div>',
+              'applet' => array(
+                '#markup' => '<div id="sign-object"></div>',
+              ),
+              'sign' => array(
+                '#markup' => '<a href="#" id="sign_link">' . t('Sign document') . '</a>',
+              ),
+              'back' => array(
+                '#markup' => '<a href="#" id="back_link" class="right-link">' . t('Back') . '</a>'
+              )
+    );
+}
+
+function signer_js_signer_forms() {
+  if(!user_access('use signer js sign')) return;
+  return array('signer_js_form' => signer_js_form());
+}
+
+/**
+ * Implementation of hook_permission
+ */
+function signer_js_permission() {
+  return array(
+    'use signer js sign' => array(
+      'title' => t('use signer js sign'),
+      'description' => t('Provide to users to use signer js sign')
+    )
+  );
+}

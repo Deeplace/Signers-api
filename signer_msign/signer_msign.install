@@ -1,0 +1,55 @@
+<?php
+
+/**
+ * Implements hook_schema
+ */
+function signer_msign_schema() {
+  $schema['msign_transaction'] = array(
+    'fields' => array(
+      'request_id' => array(
+        'type' => 'varchar',
+        'not null' => FALSE,
+        'length' => 255,
+      ),
+      'hash_fid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'status' => array(
+        'type' => 'varchar',
+        'not null' => TRUE,
+        'length' => 255,
+        'default' => ''
+      ),
+      'created' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'updated' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'info' => array(
+        'type' => 'blob',
+        'not null' => TRUE,
+      ),
+    ),
+    'indexes' => array(
+      'status' => array('status'),
+      'hash_fid' => array('hash_fid')
+    ),
+    'unique keys' => array(
+      'request_id' => array('request_id')
+    )
+  );
+
+  return $schema;
+}

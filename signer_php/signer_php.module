@@ -1,0 +1,49 @@
+<?php
+
+function signer_php_sign($fid, $uri, $did, $module, $mode, $custom_validate_callback = array(), $uid = NULL) {
+  global $user;
+  try {
+    $sign_plugin = module_invoke('signer_php', 'signer_plugin_class');
+
+    $additional_data = array();
+    $additional_data['document_id'] = $did;
+    $additional_data['mode'] = $mode;
+
+    $priv_key_path = variable_get('CPL_priv_key', '');
+    $privkey = file_get_contents($priv_key_path);
+
+    $signer = new Signer_PHP(
+      array(
+        'fid' => $fid,
+        'uid' => (isset($uid) ? $uid : $user->uid), //RECEPTION SIGN AS ADMIN
+        'operation' => Signer::OPERATION_ADD,
+        'sign_type' => $sign_plugin,
+        'additional_data' => $additional_data,
+        'custom_validate_callbacks' => $custom_validate_callback,
+        'module' => $module
+      )
+    );
+
+    $signer->prepareSignData($uri);
+    $signer->sign($privkey);
+
+    $signer->validate();
+    $signer->verify(variable_get('CPL_cer', ''));
+
+    $signer->save();
+  }
+  catch (SignerException $e) {
+    throw new Exception($e->getSystemMessage());
+  }
+
+  return TRUE;
+}
+
+/**
+ * Implements hook_signer_plugin_class()
+ */
+function signer_php_signer_plugin_class() {
+  return 'SignerPhp';
+}
+
+

@@ -1,0 +1,8 @@
+name = Mobile sign
+description = Provide to users to sign documents with mobile ID
+core = 7.x
+version = 7.x.1
+package = Signer
+dependencies[] = signer_api
+
+files[] = classes/MobileSign.class.inc

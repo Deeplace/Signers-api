@@ -1,0 +1,77 @@
+<?php
+
+/**
+ * Implements hook_schema
+ */
+function signer_api_schema() {
+  $schema['signer_signatures'] = array(
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'fid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'module' => array(
+        'type' => 'varchar',
+        'not null' => FALSE,
+        'length' => 255,
+      ),
+      'hash' => array(
+        'type' => 'varchar',
+        'not null' => FALSE,
+        'length' => 255,
+      ),
+      'rsa_sign' => array(
+        'type' => 'blob',
+        'not null' => FALSE
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'signature_fid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'created' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'sign_type' => array(
+        'type' => 'varchar',
+        'not null' => FALSE,
+        'length' => 64,
+      ),
+      'additional_data' => array(
+        'type' => 'blob',
+        'not null' => TRUE,
+        'serialize' => TRUE
+      ),
+    ),
+    'indexes' => array(
+      'fid' => array('fid'),
+      'fid_module' => array('fid', 'module'),
+    ),
+    'foreign keys' => array(
+      'file_id' => array(
+        'table' => 'file_managed',
+        'columns' => array('fid' => 'fid'),
+      ),
+      'user_id' => array(
+        'table' => 'users',
+        'columns' => array('uid' => 'uid'),
+      ),
+    ),
+    'primary key' => array('id')
+  );
+
+  return $schema;
+}

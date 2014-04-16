@@ -1,0 +1,9 @@
+name = Signer JS
+description = Signes documents using JavaScript library.
+package = Signer
+core = 7.x
+version = 7.x-1.0
+
+dependencies[] = signer_api
+
+files[] = classes/SignerJs.class.inc
