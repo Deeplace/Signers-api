@@ -1,0 +1,230 @@
+<?php
+
+/**
+ *  Implements hook_menu()
+ */
+
+function signer_example_menu() {
+  $items = array();
+
+  $items['signer_example'] = array(
+    'title' => 'Signer example',
+    'page callback' => 'signer_example_sign_doc',
+    'access arguments' => array('sign data'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['signer_example/%/get-data-to-sign'] = array(
+    'page callback'    => 'signer_example_get_data_to_sign',
+    'page arguments'   => array(1),
+    //'access callback'  => '', //FIXME WRITE CORRECT ACCESS CALLBACK
+    'access arguments' => array('access content'),
+    'type'             => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+function signer_example_sign_doc() {
+  $build = array();
+  $build['sign'] = array(
+    '#markup' => l(
+      '<span>' . t('Sign document') . '</span>',
+      '#',
+      array(
+        'attributes' => array(
+          'class' => array(
+            'signer_link'
+          ),
+          'doc_id' => 1,
+          'module' => 'signer_example',
+          'data_callback' => url('signer_example/1/get-data-to-sign'),
+        ),
+        'html' => TRUE,
+        'absolute' => TRUE,
+        'external' => TRUE
+      )
+    )
+  );
+
+  $build['unsign'] = array(
+    '#markup' => l(
+      '<span>' . t('Unsign document') . '</span>',
+      '#',
+      array(
+        'attributes' => array(
+          'class' => array(
+            'unsign_link'
+          ),
+          'doc_id' => 1,
+          'module' => 'signer_example',
+          'data_callback' => url('signer_example/1/get-data-to-sign'),
+        ),
+        'html' => TRUE,
+        'absolute' => TRUE,
+        'external' => TRUE
+      )
+    )
+  );
+
+  return $build;
+}
+
+function signer_example_get_data_to_sign($doc_id) {
+  global $user;
+  $doc = db_select('signer_example_doc', 'doc')
+    ->fields('doc')
+    ->condition('id' , $doc_id)
+    ->execute()->fetchObject();
+  $file = FALSE;
+  if(empty($doc->xml_data_fid)) {
+    //Save doc as file
+    $document_uri = variable_get('signer_example_save_place', 'db://signer_example_doc_to_sign/?id=') . $doc_id;
+    if(file_put_contents($document_uri, $doc->xml_data) !== FALSE) {
+        $file = new stdClass();
+        $file->uri = $document_uri;
+        $file->status = FILE_STATUS_PERMANENT;
+        $file->uid = $user->uid;
+        file_save($file);
+
+        db_update('signer_example_doc')
+          ->fields(array('xml_data_fid' => $file->fid))
+          ->condition('id', $doc_id)
+          ->execute();
+      }
+  }
+  else {
+    $file = file_load($doc->xml_data_fid);
+  }
+
+  drupal_json_output($file);
+  exit();
+}
+
+/**
+ * Implements hook_sign_validate_data().
+ */
+function signer_example_sign_validate_data($param) {
+  global $user;
+  $doc_id = isset($param['additional_data']['document_id']) ? $param['additional_data']['document_id'] : NULL;
+  $hash = isset($param['hash']) ? $param['hash'] : NULL;
+  $fid = isset($param['fid']) ? $param['fid'] : NULL;
+
+
+  $account = user_load($user->uid);
+
+  $doc = db_select('signer_example_doc', 'doc')
+    ->fields('doc')
+    ->condition('id' , $doc_id)
+    ->execute()->fetchObject();
+
+  if(!$doc) {
+    watchdog('signer_example', 'Invalid message document id @doc_id', array('@doc_id' => $doc_id), WATCHDOG_ERROR);
+    throw new SignerException("Document failed signed", "Document failed signed");
+  }
+
+  //Check if we sign this document
+  $document_uri = variable_get('signer_example_save_place', 'db://signer_example_doc_to_sign/?id=') . $doc_id;
+  $original_hash = sha1(file_get_contents($document_uri));
+
+  if($hash != $original_hash) {
+    watchdog('signer_example', 'Document with id @doc_id was modified content. Received hash !hash1. Compared hash !hash2',
+      array('@doc_id' => $doc_id, '!hash1' => var_export($hash, TRUE), '!hash2' => var_export($original_hash, TRUE)),
+      WATCHDOG_ERROR);
+    throw new SignerException("Cant sign document, because document was modified.", "Cant sign document, because document was modified.");
+  }
+
+  //Chech if we receive needed fid
+  $file = file_load($fid);
+  if(!$file) {
+    watchdog('signer_example', 'Document with id @doc_id has bad fid. Fid: !fid', array( '@doc_id' => $doc_id, '!fid' => $fid), WATCHDOG_ERROR);
+    throw new SignerException("Document failed signed", "Document failed signed");
+  }
+
+  $fid_data_hash = sha1(file_get_contents($file->uri));
+  if($fid_data_hash != $original_hash) {
+    watchdog('signer_example', 'Document with id @doc_id has bad hash. Received hash !hash1. Compared hash !hash2',
+      array('@doc_id' => $doc_id, '!hash1' => var_export($fid_data_hash, TRUE), '!hash2' => var_export($original_hash, TRUE)),
+      WATCHDOG_ERROR);
+    throw new SignerException("Cant sign document, because document was modified.", "Cant sign document, because document was modified.");
+  }
+
+  if(FALSE) { //CHECK STATUS OF DOCUMENT
+    watchdog('signer_example', 'Cant sign document. message Document has invalid status for signing. Data: id @doc_id, status @status', array('@doc_id' => $doc_id, '@status' => 1), WATCHDOG_ERROR);
+    throw new SignerException("Document failed signed", "Document failed signed");
+  }
+
+  //if($doc->uid != $account->uid && $user->uid != 1) {
+  if(FALSE) {//check author of document
+    watchdog('signer_example', 'User with id @user_id sign not own discount document with id @doc_id. Status: !status', array('@user_id' => $account->uid, '@doc_id' => $doc_id), WATCHDOG_ERROR);
+    throw new SignerException("Document failed signed", "Document failed signed");
+  }
+
+  //if(!empty($doc->sign_id)) {
+  if(FALSE) {
+    watchdog('signer_example', 'Cant signed document @doc_id. Its already signed.',
+      array('@doc_id' => $doc_id),
+      WATCHDOG_ERROR);
+    throw new SignerException("Document is already signed.", "Document is already signed.");
+  }
+
+  return TRUE;
+}
+
+/**
+ * Implements hook_store_signed_data().
+ */
+function signer_example_store_signed_data($param) {
+  $id = isset($param['additional_data']['document_id']) ? $param['additional_data']['document_id'] : NULL;
+  $sign_id = isset($param['id']) ? $param['id'] : NULL;
+
+  db_update('signer_example_doc')
+    ->fields(array('sign_id' => $sign_id))
+    ->condition('id', $id)
+    ->execute();
+
+  watchdog('signer_example', 'Document was signed successfully, id: @id', array('@id' => $id), WATCHDOG_NOTICE);
+  return TRUE;
+}
+
+
+
+/**
+ * Implementation of hook_unsign_validate_data()
+ */
+function signer_example_unsign_validate_data($param) {
+  $doc_id = isset($param['additional_data']['document_id']) ? $param['additional_data']['document_id'] : NULL;
+
+  $doc = db_select('signer_example_doc', 'doc')
+    ->fields('doc')
+    ->condition('id' , $doc_id)
+    ->execute()->fetchObject();
+
+  if(!$doc) {
+    watchdog('signer_example', 'Cant unsign document. Invalid document id @doc_id', array( '@doc_id' => $doc_id), WATCHDOG_ERROR);
+    throw new SignerException("Document failed unsigned", "Document failed unsigned");
+  }
+
+  if(FALSE) {//CHECK STATUS OF DOCUMENT
+    watchdog('signer_example', 'Cant sign document. Document has invalid status for signing. Data: id @doc_id, status @status', array('@doc_id' => $doc_id, '@status' => 1), WATCHDOG_ERROR);
+    throw new SignerException("Document failed signed", "Document failed signed");
+  }
+
+  return TRUE;
+}
+
+
+/**
+ * Implementation of hook_signer_remove_sign()
+ */
+
+function signer_example_signer_remove_sign($param) {
+  $doc_id = isset($param['additional_data']['document_id']) ? $param['additional_data']['document_id'] : NULL;
+
+  db_update('signer_example_doc')
+    ->fields(array('sign_id' => 0))
+    ->condition('id', $doc_id)
+    ->execute();
+
+  return TRUE;
+}

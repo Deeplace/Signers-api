@@ -1,0 +1,71 @@
+<?php
+
+/**
+ * Implements hook_schema
+ */
+function signer_example_schema() {
+  $schema['signer_example_doc'] = array(
+    'fields' => array(
+      'id' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'xml_data' => array(
+        'type' => 'text',
+        'not null' => TRUE,
+      ),
+      'xml_data_fid' => array(
+        'type' => 'int',
+        'not null' => FALSE,
+        'unsigned' => TRUE,
+      ),
+      'sign_id' => array(
+        'type' => 'int',
+        'not null' => FALSE,
+        'unsigned' => TRUE,
+      ),
+    ),
+    'indexes' => array(
+      'id' => array('id'),
+    ),
+  );
+
+  return $schema;
+}
+
+/**
+ * Implements hook_install
+ */
+
+function signer_example_install() {
+  db_insert('signer_example_doc')->fields(array(
+    'id' => 1,
+    'xml_data' => '<?xml version="1.0" encoding="UTF-8" ?><tag1>sign data<tag1>',
+    'xml_data_fid' => NULL,
+    'sign_id' => NULL
+  ))->execute();
+
+  variable_set('db_stream_available_tables', 'signer_example_doc_to_sign');
+  variable_set('signer_api_dialog_pages', 'signer_example');
+  drupal_install_schema('database_stream_wrapper');
+}
+
+/**
+ * Implements hook_uninstall
+ */
+
+function signer_example_uninstall() {
+  variable_set('db_stream_available_tables', '');
+
+  $xml_data_fid = db_select('signer_example_doc', 'doc')
+    ->fields('doc', array('xml_data_fid'))
+    ->condition('id' , 1)
+    ->execute()->fetchField();
+
+  if($xml_data_fid) {
+    $file = file_load($xml_data_fid);
+    file_delete($file);
+  }
+}
+
