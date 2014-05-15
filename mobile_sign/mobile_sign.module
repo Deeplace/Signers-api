@@ -53,21 +53,24 @@ function mobile_sign_menu() {
     'title' => 'Sign doc',
     'page callback' => 'mobile_sign_doc',
     'access arguments' => array('use mobile sign'),
-    'file' => 'mobile_sign.pages.inc'
+    'file' => 'mobile_sign.pages.inc',
+    'type' => MENU_CALLBACK,
   );
 
   $items['mobile_id/response'] = array(
     'title' => 'Mobile id response',
     'page callback' => 'mobile_sign_response',
     'access callback' => TRUE,
-    'file' => 'mobile_sign.pages.inc'
+    'file' => 'mobile_sign.pages.inc',
+    'type' => MENU_CALLBACK,
   );
 
   $items['mobile_id/check_status'] = array(
     'title' => 'Mobile id response',
     'page callback' => 'mobile_sign_check_status',
     'access arguments' => array('use mobile sign'),
-    'file' => 'mobile_sign.pages.inc'
+    'file' => 'mobile_sign.pages.inc',
+    'type' => MENU_CALLBACK,
   );
 
   $items['admin/config/services/mobile_sign'] = array(

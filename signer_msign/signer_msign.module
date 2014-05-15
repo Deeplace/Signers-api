@@ -61,14 +61,16 @@ function signer_msign_menu() {
     'title' => 'Sign doc',
     'page callback' => 'signer_msign_sign_doc',
     'access arguments' => array('use sign msign'),
-    'file' => 'signer_msign.pages.inc'
+    'file' => 'signer_msign.pages.inc',
+    'type' => MENU_CALLBACK,
   );
 
   $items['msign/response'] = array(
     'title' => 'Sign document result',
     'page callback' => 'signer_msign_response',
     'access callback' => TRUE,
-    'file' => 'signer_msign.pages.inc'
+    'file' => 'signer_msign.pages.inc',
+    'type' => MENU_CALLBACK,
   );
 
   $items['admin/config/services/msign'] = array(
